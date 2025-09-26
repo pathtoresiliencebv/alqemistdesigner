@@ -15,7 +15,7 @@
     "dependencies": {
         "@eslint/compat": "^1.2.9",
         "@next/eslint-plugin-next": "^15.3.2",
-        "eslint-config-prettier": "^9.1.0",
+        "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-import": "^2.31.0",
         "eslint-plugin-jsonc": "^2.18.2",
         "eslint-plugin-only-warn": "^1.1.0",
