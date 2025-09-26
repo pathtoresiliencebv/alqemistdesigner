@@ -128,21 +128,13 @@ export default function TestSyncEnginePage() {
         setConnectionError(null);
 
         try {
-            console.log('Connecting to sandbox:', id);
+            console.log('Connecting to Freestyle repo:', id);
 
-            const session = await startSandbox.mutateAsync({ sandboxId: id });
-
-            // Create provider client
-            const providerClient = await createCodeProviderClient(CodeProvider.CodeSandbox, {
+            // Create provider client for Freestyle
+            const providerClient = await createCodeProviderClient(CodeProvider.Freestyle, {
                 providerOptions: {
-                    codesandbox: {
-                        sandboxId: id,
-                        userId: 'test',
-                        initClient: true,
-                        getSession: async (sandboxId) => {
-                            // This will be called for reconnects
-                            return await startSandbox.mutateAsync({ sandboxId });
-                        },
+                    freestyle: {
+                        repoId: id,
                     },
                 },
             });
@@ -313,14 +305,8 @@ export default function TestSyncEnginePage() {
         setIsLoadingSandboxContent(true);
         try {
             const result = await provider.readFile({ args: { path: selectedSandboxFile } });
-            const { file } = result;
-
-            if (file.type === 'text') {
-                setSandboxFileContent(file.content);
-            } else {
-                // Binary file
-                setSandboxFileContent(null);
-            }
+            // Freestyle provider returns content directly
+            setSandboxFileContent(result.content);
         } catch (error) {
             console.error('Failed to load sandbox file:', error);
             setSandboxFileContent(null);

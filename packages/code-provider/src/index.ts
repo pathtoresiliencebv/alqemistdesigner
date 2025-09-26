@@ -1,8 +1,8 @@
 import { CodeProvider } from './providers';
-import { CodesandboxProvider, type CodesandboxProviderOptions } from './providers/codesandbox';
+import { FreestyleProvider, type FreestyleProviderOptions } from './providers/freestyle';
 import { NodeFsProvider, type NodeFsProviderOptions } from './providers/nodefs';
 export * from './providers';
-export { CodesandboxProvider } from './providers/codesandbox';
+export { FreestyleProvider } from './providers/freestyle';
 export { NodeFsProvider } from './providers/nodefs';
 export * from './types';
 
@@ -25,9 +25,9 @@ export async function createCodeProviderClient(
 
 export async function getStaticCodeProvider(
     codeProvider: CodeProvider,
-): Promise<typeof CodesandboxProvider | typeof NodeFsProvider> {
-    if (codeProvider === CodeProvider.CodeSandbox) {
-        return CodesandboxProvider;
+): Promise<typeof NodeFsProvider | typeof FreestyleProvider> {
+    if (codeProvider === CodeProvider.Freestyle) {
+        return FreestyleProvider;
     }
 
     if (codeProvider === CodeProvider.NodeFs) {
@@ -37,16 +37,16 @@ export async function getStaticCodeProvider(
 }
 
 export interface ProviderInstanceOptions {
-    codesandbox?: CodesandboxProviderOptions;
+    freestyle?: FreestyleProviderOptions;
     nodefs?: NodeFsProviderOptions;
 }
 
 function newProviderInstance(codeProvider: CodeProvider, providerOptions: ProviderInstanceOptions) {
-    if (codeProvider === CodeProvider.CodeSandbox) {
-        if (!providerOptions.codesandbox) {
-            throw new Error('Codesandbox provider options are required.');
+    if (codeProvider === CodeProvider.Freestyle) {
+        if (!providerOptions.freestyle) {
+            throw new Error('Freestyle provider options are required.');
         }
-        return new CodesandboxProvider(providerOptions.codesandbox);
+        return new FreestyleProvider(providerOptions.freestyle);
     }
 
     if (codeProvider === CodeProvider.NodeFs) {

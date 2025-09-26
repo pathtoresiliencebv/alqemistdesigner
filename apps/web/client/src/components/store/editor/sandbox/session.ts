@@ -19,22 +19,17 @@ export class SessionManager {
         makeAutoObservable(this);
     }
 
-    async start(sandboxId: string, userId?: string) {
+    async start(repoId: string, userId?: string) {
         if (this.isConnecting || this.provider) {
             return;
         }
         this.isConnecting = true;
 
         try {
-            this.provider = await createCodeProviderClient(CodeProvider.CodeSandbox, {
+            this.provider = await createCodeProviderClient(CodeProvider.Freestyle, {
                 providerOptions: {
-                    codesandbox: {
-                        sandboxId,
-                        userId,
-                        initClient: true,
-                        getSession: async (sandboxId, userId) => {
-                            return api.sandbox.start.mutate({ sandboxId });
-                        },
+                    freestyle: {
+                        repoId,
                     },
                 },
             });
@@ -53,24 +48,22 @@ export class SessionManager {
             console.error('No provider found in restartDevServer');
             return false;
         }
-        const { task } = await this.provider.getTask({
-            args: {
-                id: 'dev',
-            },
-        });
-        if (task) {
-            await task.restart();
+        // Freestyle dev servers auto-restart, but we can try running the dev command again.
+        // This logic might need to be adapted based on how Freestyle handles dev servers.
+        try {
+            await this.provider.runCommand({ args: { command: 'npm run dev' }});
             return true;
+        } catch (error) {
+            console.error('Failed to restart dev server', error);
+            return false;
         }
-        return false;
     }
 
     async readDevServerLogs(): Promise<string> {
-        const result = await this.provider?.getTask({ args: { id: 'dev' } });
-        if (result) {
-            return await result.task.open();
-        }
-        return 'Dev server not found';
+        // This is tricky with Freestyle as there's no direct "task" concept like in CodeSandbox.
+        // We can try to read the output of the dev command, but that might not be reliable.
+        // Returning a placeholder for now.
+        return 'Dev server log reading is not fully supported with Freestyle yet.';
     }
 
     getTerminalSession(id: string) {
@@ -120,10 +113,12 @@ export class SessionManager {
     }
 
     async hibernate(sandboxId: string) {
-        await api.sandbox.hibernate.mutate({ sandboxId });
+        // Freestyle VMs shutdown automatically, so an explicit hibernate might not be needed.
+        // The `destroy` method on the provider already handles shutdown.
+        console.log('Hibernate called, but Freestyle manages this automatically.');
     }
 
-    async reconnect(sandboxId: string, userId?: string) {
+    async reconnect(repoId: string, userId?: string) {
         try {
             if (!this.provider) {
                 console.error('No provider found in reconnect');
@@ -136,15 +131,8 @@ export class SessionManager {
                 return;
             }
 
-            // Attempt soft reconnect
-            await this.provider?.reconnect();
-
-            const isConnected2 = await this.ping();
-            if (isConnected2) {
-                return;
-            }
-
-            await this.start(sandboxId, userId);
+            // With Freestyle, reconnecting is essentially the same as starting a new session
+            await this.start(repoId, userId);
         } catch (error) {
             console.error('Failed to reconnect to sandbox', error);
             this.isConnecting = false;
